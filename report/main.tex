@@ -1,0 +1,427 @@
+\documentclass{article}
+
+% Language setting
+\usepackage[english]{babel}
+
+% Set page size and margins
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{placeins}
+
+\begin{document}
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    
+    {\LARGE \bfseries Department of Information and Communication Technology \par}
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.75\linewidth]{logo.png}
+        \label{fig:enter-label}
+    \end{figure}
+    
+    \vspace{1cm}
+    
+    {\Huge \bfseries Data Analysis in Atmospheric Science \par}
+    
+    \vspace{1cm}
+    
+    {\Large Weather Types Classification Report \par}
+    
+    \vfill
+    
+    \begin{minipage}{0.5\textwidth}
+        \begin{flushleft}
+            {\large \textbf{Group 3}} \\
+            22BI13103 - Le Duc Dung\\
+            22BI13375 - Nguyen Tran Minh Quan\\
+            22BI13233 - Tran Tuan Kiet\\
+            BI12-204  - Nghiem Phu Khang
+        \end{flushleft}
+    \end{minipage}%
+    \begin{minipage}{0.5\textwidth}
+        \begin{flushright}
+            {\large \textbf{Lecturer:}} \\
+            Nguyen Le Dung
+        \end{flushright}
+    \end{minipage}
+    
+    \vspace{2cm}
+    
+    {\large Academic year: 2022 - 2025} \par
+    
+    \vspace{1cm}
+    
+    {March 20, 2025}
+    
+\end{titlepage}
+
+\begin{abstract}
+This report presents a machine learning approach to atmospheric weather classification using the "Weather Type Classification" dataset from Kaggle\footnote{Dataset source: \url{https://www.kaggle.com/datasets/nikhil7280/weather-type-classification}}. The dataset consists of a CSV file containing weather-related features and corresponding weather labels. We applied five different machine learning models to classify weather conditions, comparing their performance to identify the most effective model. Since the dataset is clean with no missing values and all features are in appropriate formats, minimal preprocessing was required. The dataset was divided into training, validation, and testing subsets to ensure robust performance evaluation across unseen data.
+\end{abstract}
+
+\section{Introduction}
+
+Atmospheric weather classification is a crucial task in meteorology, assisting in the accurate identification and prediction of different weather conditions. This report focuses on classifying weather types using machine learning models to improve forecasting accuracy. We utilized five distinct machine learning algorithms to analyze and classify weather conditions based on structured data. The objective was to compare the performance of these models and identify the most effective approach for weather classification.
+
+\section{Data Exploration and Visualization}
+\subsection{Description}
+The dataset used for this project is the "Weather Type Classification" dataset from Kaggle\footnote{Dataset source: \url{https://www.kaggle.com/datasets/nikhil7280/weather-type-classification}}. It is provided in CSV format and includes various meteorological features such as temperature (\textdegree C), humidity (\%), wind speed (km/h), and atmospheric pressure (hPa), along with corresponding weather labels (e.g., cloudy, rain, snow, shine, and sunrise). 
+\begin{table}[ht]
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lccccccc}
+        \toprule
+        & \textbf{Temperature (\textdegree C)} & \textbf{Humidity (\%)} & \textbf{Wind Speed (km/h)} & \textbf{Precipitation (\%)} & \textbf{Atmospheric Pressure (hPa)} & \textbf{UV Index} & \textbf{Visibility (km)} \\
+        \midrule
+        \textbf{count} & 13200 & 13200 & 13200 & 13200 & 13200 & 13200 & 13200 \\
+        \textbf{mean} & 19.13 & 68.71 & 9.83 & 53.64 & 1005.83 & 4.01 & 5.46 \\
+        \textbf{std} & 17.39 & 20.19 & 6.91 & 31.95 & 37.20 & 3.86 & 3.37 \\
+        \textbf{min} & -25.00 & 20.00 & 0.00 & 0.00 & 800.12 & 0.00 & 0.00 \\
+        \textbf{25\%} & 4.00 & 57.00 & 5.00 & 19.00 & 994.80 & 1.00 & 3.00 \\
+        \textbf{50\%} & 21.00 & 70.00 & 9.00 & 58.00 & 1007.65 & 3.00 & 5.00 \\
+        \textbf{75\%} & 31.00 & 84.00 & 13.50 & 82.00 & 1016.77 & 7.00 & 7.50 \\
+        \textbf{max} & 109.00 & 109.00 & 48.50 & 109.00 & 1199.21 & 14.00 & 20.00 \\
+        \bottomrule
+    \end{tabular}}
+    \caption{Descriptive Statistics of Weather Data}
+\end{table}
+
+
+
+To gain insights into the dataset and understand the relationships between features, we performed various exploratory data analysis (EDA) steps. Below are the visualizations generated:
+
+\subsection{Correlation Matrix}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Correlation_Matrix.png}
+    \caption{Correlation Matrix of Weather Features}
+\end{figure}
+The correlation matrix provides insights into the relationships between various weather-related variables. The key observations from the matrix are as follows:
+
+\begin{itemize}
+\item \textbf{Temperature:} It exhibits a positive correlation with UV Index ($r = 0.37$) and Visibility ($r = 0.25$). However, it shows a weak negative correlation with Humidity ($r = -0.21$) and Precipitation ($r = -0.29$), indicating that as temperature increases, humidity and precipitation tend to decrease slightly.
+\item \textbf{Humidity:} There is a moderate positive correlation with Precipitation ($r = 0.64$) and Wind Speed ($r = 0.41$), suggesting that higher humidity is associated with increased precipitation and wind speed. Conversely, it is negatively correlated with Visibility ($r = -0.48$), implying reduced visibility in high humidity conditions.
+
+\item \textbf{Wind Speed:} It has a moderate positive correlation with Precipitation ($r = 0.44$), meaning higher wind speeds are associated with more precipitation. It also shows a weak negative correlation with Visibility ($r = -0.31$).
+
+\item \textbf{Precipitation:} Strongly correlated with Humidity ($r = 0.64$) and moderately correlated with Wind Speed ($r = 0.44$), but negatively correlated with Visibility ($r = -0.46$), indicating that higher precipitation is associated with reduced visibility.
+
+\item \textbf{Atmospheric Pressure:} This variable exhibits weak correlations with other factors, with the strongest positive relation being with the UV Index ($r = 0.15$).
+
+\item \textbf{UV Index:} It has a positive correlation with Temperature ($r = 0.37$) and Visibility ($r = 0.36$) but shows a weak negative correlation with Humidity ($r = -0.34$) and Precipitation ($r = -0.29$).
+
+\item \textbf{Visibility:} It is negatively correlated with Humidity ($r = -0.48$), Wind Speed ($r = -0.31$), and Precipitation ($r = -0.46$), confirming that higher moisture and precipitation levels reduce visibility.
+\end{itemize}
+
+
+
+\subsection{Pairplot}
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Pairplot.png}
+    \caption{Pairplot of Numerical Features}
+\end{figure}
+
+
+The pairplot provides a comprehensive visualization of the relationships and distributions of weather features across different weather types. Key insights from the pairplot include:
+
+\begin{itemize}
+\item \textbf{Temperature:} Distinct clusters are visible for different weather types. Sunny days generally exhibit higher temperatures, while snowy conditions correspond to lower temperatures.
+\item \textbf{Humidity:} There is a moderate positive correlation with Precipitation ($r = 0.64$) and Wind Speed ($r = 0.41$), suggesting that higher humidity is associated with increased precipitation and wind speed. Conversely, it is negatively correlated with Visibility ($r = -0.48$), implying reduced visibility in high humidity conditions.
+
+\item \textbf{Wind Speed:} It has a moderate positive correlation with Precipitation ($r = 0.44$), meaning higher wind speeds are associated with more precipitation. It also shows a weak negative correlation with Visibility ($r = -0.31$).
+
+\item \textbf{Precipitation:} Strongly correlated with Humidity ($r = 0.64$) and moderately correlated with Wind Speed ($r = 0.44$), but negatively correlated with Visibility ($r = -0.46$), indicating that higher precipitation is associated with reduced visibility.
+
+\item \textbf{Atmospheric Pressure:} This variable exhibits weak correlations with other factors, with the strongest positive relation being with the UV Index ($r = 0.15$).
+
+\item \textbf{UV Index:} It has a positive correlation with Temperature ($r = 0.37$) and Visibility ($r = 0.36$) but shows a weak negative correlation with Humidity ($r = -0.34$) and Precipitation ($r = -0.29$).
+
+\item \textbf{Visibility:} It is negatively correlated with Humidity ($r = -0.48$), Wind Speed ($r = -0.31$), and Precipitation ($r = -0.46$), confirming that higher moisture and precipitation levels reduce visibility.
+\end{itemize}
+
+\subsection{Numerical Data Distribution}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Numerical_data_histogram.png}
+    \caption{Histogram of Numerical Features}
+\end{figure}
+
+\begin{itemize}
+\item \textbf{Temperature:} The temperature distribution is approximately normal, centered around 20°C, with extreme values ranging from -20°C to 100°C.
+
+\item \textbf{Humidity:} Humidity values are concentrated between 50% and 80%, with fewer instances at the extremes.
+
+\item \textbf{Wind Speed:} The distribution is right-skewed, with most wind speeds below 10 km/h and a few reaching up to 50 km/h.
+
+\item \textbf{Precipitation:} This variable shows a bimodal distribution, with peaks near 20% and 90%, indicating frequent occurrences of both light and heavy precipitation.
+
+\item \textbf{Atmospheric Pressure:} The majority of observations are clustered around 1000 hPa, with minor deviations in both directions.
+
+\item \textbf{UV Index:} This distribution is right-skewed, where most observations fall below 4, but a small proportion reaches up to 14.
+
+\item \textbf{Visibility:} Visibility is concentrated between 0 km and 10 km, with fewer instances of extreme clarity beyond 15 km.
+\end{itemize}
+
+These distributions highlight the range and common values of each weather feature, providing essential insights for further analysis.
+
+\subsection{Categorical Data Distribution}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{weather.png}
+    \caption{Data Distribution of Weather Types}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{cloud.png}
+    \caption{Data Distribution of Cloud Cover}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{loc.png}
+    \caption{Data Distribution of Locations}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{season.png}
+    \caption{Data Distribution of Seasons}
+\end{figure}
+
+The categorical data distributions reveal patterns across different weather categories. Key observations include:
+
+\begin{itemize}
+\item \textbf{Weather Type:} The most common weather types are sunny and cloudy, with fewer instances of extreme conditions like snow or thunderstorms. This suggests the dataset is skewed towards fair-weather observations.
+
+\item \textbf{Cloud Cover:} The distribution is multimodal, with peaks at both low and high values. This indicates that observations often fall into either clear or overcast categories, with fewer instances of partial cloud cover.
+
+\item \textbf{Locations:} Certain locations contribute more data points, implying geographical bias. Urban areas may exhibit more frequent reporting due to monitoring stations.
+
+\item \textbf{Seasons:} Observations are fairly evenly distributed across seasons, though winter appears to have slightly fewer records, possibly due to reduced data collection during extreme cold conditions.
+\end{itemize}
+
+These categorical distributions complement the numerical analysis by highlighting trends in weather classification and location-based patterns.
+
+\subsection{Analysis of Weather Feature Distributions}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Violin_plot.png}
+    \caption{Weather Feature Distribtion (Violin plot)}
+\end{figure}
+
+The violin plots above illustrate the distribution of key weather-related variables. Each plot combines a box plot with a kernel density estimate to visualize both the central tendency and the spread of the data:
+
+\begin{itemize}
+    \item \textbf{Temperature:} The distribution of temperature shows multiple peaks, suggesting the presence of distinct weather conditions. Most data points are concentrated between 0°C and 40°C, with extreme values extending beyond 100°C.
+    
+    \item \textbf{Humidity:} This feature exhibits a bimodal distribution, with data clustering around 40\% and 80\%, indicating varying humidity levels across different weather conditions.
+    
+    \item \textbf{Wind Speed:} The majority of wind speeds are concentrated below 20 km/h, while extreme wind speeds beyond 40 km/h are rare.
+    
+    \item \textbf{Precipitation (\%):} The precipitation data is widely dispersed, with two main peaks near 0\% and 100\%, reflecting both dry and rainy conditions.
+    
+    \item \textbf{Atmospheric Pressure:} The distribution of atmospheric pressure is tightly centered around 1000 hPa, suggesting minimal variability in this parameter.
+    
+    \item \textbf{UV Index:} Most UV index values are concentrated between 0 and 10, with a peak near zero indicating many low-UV observations.
+    
+    \item \textbf{Visibility (km):} Visibility shows a bimodal distribution, with most observations concentrated between 0 and 10 km, reflecting clear and low-visibility conditions.
+\end{itemize}
+
+Overall, these violin plots highlight the distribution patterns, density, and presence of outliers for each weather-related feature, providing a comprehensive understanding of the dataset.
+
+
+
+\subsection{Feature Analysis}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth, height=0.8\textheight, keepaspectratio]{Weather_Type_vs_Numerical_Features_Boxplot.png}
+    \caption{Weather Type vs Numerical Features (Boxplot)}
+    \label{fig:weather_type_boxplot}
+\end{figure}
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth, height=1\textwidth]{Weather_Type_vs_Numerical_Features_Violinplot.png}
+    \caption{Weather Type vs Numerical Features (Violinplot)}
+\end{figure}
+
+
+From Figure~\ref{fig:weather_type_boxplot}, several observations can be made regarding the relationship between weather types and various numerical features:
+
+\begin{itemize}
+    \item \textbf{Temperature:} Sunny weather exhibits the highest median temperature with a wider spread, while snowy conditions correspond to the lowest temperature range.
+    \item \textbf{Humidity:} Rainy and snowy weather types are associated with consistently higher humidity levels, whereas sunny conditions display lower humidity.
+    \item \textbf{Wind Speed:} Both rainy and snowy weather show higher wind speeds compared to sunny and cloudy weather, though all categories exhibit a large number of outliers.
+    \item \textbf{Precipitation (\%):} As expected, precipitation is significantly higher during rainy and snowy conditions, while sunny weather exhibits minimal precipitation.
+    \item \textbf{Atmospheric Pressure:} Atmospheric pressure remains relatively stable across weather types, but rainy and cloudy conditions tend to show slightly lower values.
+    \item \textbf{UV Index:} Sunny weather results in the highest UV index, while snowy conditions show the lowest values due to reduced sunlight exposure.
+    \item \textbf{Visibility (km):} Visibility is notably reduced during rainy and snowy weather, while sunny and cloudy conditions provide better visibility.
+\end{itemize}
+
+These insights suggest distinct patterns across weather types, which may help in building predictive models for weather classification based on numerical features.
+
+Figure~\ref{fig:weather_type_violin} displays the distribution of key numerical weather features across different weather types (Rainy, Cloudy, Sunny, Snowy) using violin plots. The following observations can be drawn:
+
+\begin{itemize}
+    \item \textbf{Temperature:} 
+    \begin{itemize}
+        \item Sunny weather shows the highest temperature range, typically between 20°C and 40°C.
+        \item Snowy conditions are associated with the lowest temperatures, with values mostly below 10°C.
+        \item Rainy and cloudy weather types exhibit moderate temperatures, centered around 20°C.
+    \end{itemize}
+    
+    \item \textbf{Humidity:}
+    \begin{itemize}
+        \item Rainy and snowy conditions display consistently high humidity, with values concentrated between 80\% and 100\%.
+        \item Sunny weather shows a broader range but tends toward lower humidity levels.
+        \item Cloudy weather has intermediate humidity values, overlapping with both sunny and rainy distributions.
+    \end{itemize}
+
+    \item \textbf{Wind Speed:}
+    \begin{itemize}
+        \item Rainy and snowy weather types tend to have higher wind speeds, with values frequently exceeding 20 km/h.
+        \item Sunny and cloudy conditions exhibit lower wind speeds, typically below 20 km/h.
+    \end{itemize}
+
+    \item \textbf{Precipitation (\%):}
+    \begin{itemize}
+        \item As expected, rainy and snowy weather conditions exhibit the highest precipitation values.
+        \item Sunny conditions show minimal precipitation, while cloudy weather has moderate levels but with a large variance.
+    \end{itemize}
+
+    \item \textbf{Atmospheric Pressure:}
+    \begin{itemize}
+        \item Atmospheric pressure remains relatively stable across weather types, with minor deviations.
+        \item Cloudy and rainy weather show slightly lower pressure on average compared to sunny weather.
+    \end{itemize}
+
+    \item \textbf{UV Index:}
+    \begin{itemize}
+        \item Sunny weather demonstrates the highest UV index, with values ranging from 5 to 12.
+        \item Snowy weather exhibits the lowest UV index, often remaining below 2.
+        \item Cloudy and rainy weather types show moderate UV index values with a similar distribution pattern.
+    \end{itemize}
+
+    \item \textbf{Visibility (km):}
+    \begin{itemize}
+        \item Visibility is reduced in rainy and snowy conditions, often falling below 5 km.
+        \item Cloudy weather displays intermediate visibility, while sunny conditions provide the best visibility, frequently exceeding 10 km.
+    \end{itemize}
+\end{itemize}
+
+These violin plots provide a comprehensive overview of how weather types influence key meteorological variables, highlighting clear patterns in temperature, humidity, wind speed, and other factors.
+
+
+\section{Data Pre-processing}
+For effective model training, the following pre-processing steps were performed:
+
+\begin{itemize}
+\item \textbf{Feature Scaling:} Numerical features were standardized to ensure all features contribute equally to model learning.
+\item \textbf{Categorical Encoding:} Categorical features were encoded to be used in machine learning models.
+\item \textbf{Data Splitting:} The dataset was split into training and testing sets using an 80-20 ratio to evaluate model performance on unseen data.
+\end{itemize}
+
+To handle outliers, we used the \textbf{Interquartile Range (IQR) method}, which focuses on the middle 50\% of the data. The process is as follows:
+
+
+\begin{enumerate}
+    \item \textbf{Calculate the first quartile (Q1, 25th percentile)} and \textbf{third quartile (Q3, 75th percentile)} for each numerical feature.
+    \item Compute the \textbf{Interquartile Range (IQR)}: \( \text{IQR} = Q3 - Q1 \).
+    \item Define outliers as any data point falling below \( Q1 - 1.5 \times \text{IQR} \) or above \( Q3 + 1.5 \times \text{IQR} \).
+    \item Remove these extreme values to ensure that our model is trained on reliable data without being influenced by extreme anomalies.
+\end{enumerate}
+
+
+\section{Model}
+
+% Section: Models Used
+
+\begin{itemize}
+    \item \textbf{Random Forest:} An ensemble learning method that constructs multiple decision trees during training and outputs the mode of the classes (classification) or mean prediction (regression) of individual trees. It is known for its robustness to overfitting and high accuracy on structured data.
+
+    \item \textbf{Support Vector Machine (SVM):} A powerful supervised learning algorithm used for both classification and regression tasks. SVM works by finding the optimal hyperplane that best separates data points of different classes in a high-dimensional space. It is effective in high-dimensional spaces and suitable for complex decision boundaries.
+
+    \item \textbf{Naive Bayes:} A probabilistic classifier based on Bayes' theorem with the assumption of conditional independence between features. It is computationally efficient and performs well with large datasets and high-dimensional data, especially in text classification.
+
+    \item \textbf{Stochastic Gradient Descent (SGD) Classifier:} An iterative optimization algorithm for large-scale linear classification tasks. It is particularly useful for datasets with many samples due to its efficiency in handling large data and its adaptability to various loss functions.
+
+    \item \textbf{Multi-layer Perceptron (MLP) Classifier:} A type of artificial neural network with multiple layers of nodes. MLP uses backpropagation for training and is capable of capturing complex relationships in data. It is effective for both classification and regression tasks, especially with non-linear data.
+\end{itemize}
+
+
+\begin{table}[h]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Model} & \textbf{Hyperparameters} \\
+\hline
+Random Forest & \texttt{\{bootstrap: True, max\_depth: 20, max\_features: 'sqrt', min\_samples\_leaf: 2, min\_samples\_split: 5, n\_estimators: 200\}} \\
+SVM & \texttt{\{C: 10, degree: 2, gamma: 'auto', kernel: 'rbf'\}} \\
+Naive Bayes & \texttt{\{var\_smoothing: 0.001\}} \\
+SGD Classifier & \texttt{\{alpha: 0.01, learning\_rate: 'optimal', loss: 'modified\_huber', max\_iter: 1000, penalty: 'l1', tol: 0.001\}} \\
+MLP Classifier & \texttt{\{activation: 'relu', alpha: 0.1, hidden\_layer\_sizes: (50, 50), learning\_rate: 'constant', max\_iter: 200, solver: 'adam'\}} \\
+\hline
+\end{tabular}%
+}
+\caption{Model Hyperparameters}
+\label{tab:model_hyperparameters}
+\end{table}
+
+
+
+\section{Result}
+\subsection{Result}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{Accuracy} & \textbf{Precision} & \textbf{F1-Score} & \textbf{Recall} \\
+\hline
+Random Forest    & 0.9752 & 0.9754 & 0.9753 & 0.9752 \\
+SVM              & 0.9731 & 0.9732 & 0.9731 & 0.9731 \\
+Naive Bayes      & 0.9423 & 0.9427 & 0.9422 & 0.9423 \\
+SGD Classifier   & 0.9444 & 0.9459 & 0.9447 & 0.9444 \\
+MLP Classifier   & 0.9683 & 0.9686 & 0.9684 & 0.9683 \\
+\hline
+\end{tabular}
+\caption{Model Performance Comparison (Accuracy, Precision, F1-Score, Recall)}
+\label{tab:performance_metrics}
+\end{table}
+
+The following confusion matrices display the performance of five different machine learning models: Random Forest, Support Vector Machine (SVM), Naive Bayes, Stochastic Gradient Descent (SGD), and Multi-layer Perceptron (MLP). Each matrix visualizes the predictions against the true labels, providing insight into the accuracy and misclassification patterns of each model.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Confusion_matrices.png}
+    \caption{Enter Caption}
+    \label{fig:enter-label}
+\end{figure}
+
+\subsection{Conclusion}
+
+Based on the performance metrics—\textbf{Accuracy}, \textbf{Precision}, \textbf{F1-Score}, and \textbf{Recall}—the \textbf{Random Forest} model demonstrates the best overall performance across all evaluated criteria. It achieves the highest accuracy (0.9752), along with balanced and superior precision (0.9754), F1-score (0.9753), and recall (0.9752), indicating that it consistently classifies the data with minimal errors.
+
+\subsection{Model Selection Consideration}
+
+Although the Random Forest model performs the best, the performance gap between all models is relatively small. Therefore, to optimize computational efficiency, I will select the model that requires the least resources.
+
+\textbf{Final Decision:} Given its simplicity and lower computational cost, the \textbf{Naive Bayes} model is the most practical choice despite its slightly lower performance metrics. It is computationally efficient and suitable for large datasets, making it a better option when resource usage is a concern.
+
+
+\end{document}
